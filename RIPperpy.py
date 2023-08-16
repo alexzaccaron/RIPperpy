@@ -17,35 +17,33 @@ def main():
     fileWindows.write("seq\tstart\tend\tproduct\tsubstrate\tcomposite\tgc\tresult\n")
 
 
-    # for each fasta sequence
-    for record in SeqIO.parse("example/NC_063025.1.fasta", "fasta"):
+    for record in SeqIO.parse("example/NC_063025.1.fasta", "fasta"):    # for each fasta sequence
     
-        w_start = 0
-        w_end   = w_start+wsize
+        w_start = 0                  # start of first window
+        w_end   = w_start+wsize      # end of first window
     
-    
-        rip_islant_status = 'RIP_notaffected'
-        rip_island_start = 0
-        rip_island_end   = 0
-    
-        while w_start < len(record.seq):
-        
-             
+
+        while w_start < len(record.seq):        # until the start of window reaches the sequence's end
+
             wseq = record.seq[w_start:w_end]    # get sequence from window
             
+            wseq_subs = round( calculate_substrate(wseq.upper()), ndigits=2)    # calculate substrate index for window
+            wseq_prod = round( calculate_product(wseq.upper()), ndigits=2)      # calculate product index for window
+            wseq_comp = round( calculate_composite(wseq.upper()), ndigits=2)    # calculate composite index for window
+            wseq_gc   = round( GC(wseq), ndigits=2)                             # get GC% for window
+            rip_res   = classify_rip_window(wseq_subs, wseq_prod, wseq_comp)    # find out if window is affected or not by RIP
             
-            wseq_subs = round( calculate_substrate(wseq.upper()), ndigits=2)
-            wseq_prod = round( calculate_product(wseq.upper()), ndigits=2)
-            wseq_comp = round( calculate_composite(wseq.upper()), ndigits=2)
-            wseq_gc   = round( GC(wseq), ndigits=2)
-            rip_res   = classify_rip_window(wseq_subs, wseq_prod, wseq_comp)
-            
-            
+            # write to indices values to file
             fileWindows.write(record.id + "\t" + str(w_start) + "\t" + str(w_end) + "\t" + str(wseq_prod) + "\t" + str(wseq_subs) + "\t" + str(wseq_comp) + "\t" + str(wseq_gc) + "\t" + rip_res + "\n")
-                
+            
 
-            w_start = w_start+ssize
-            w_end   = min((w_start + wsize), len(record.seq) )
+            if w_end == len(record.seq):    # Break here if the window's end coordinate reaches the sequence's end
+                break
+
+            w_start = w_start+ssize                               # start coordinate of next window
+            w_end   = min((w_start + wsize), len(record.seq) )    # end coordinate of next window
+
+
     
     fileWindows.close()
 
